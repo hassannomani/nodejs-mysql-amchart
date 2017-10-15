@@ -1,30 +1,53 @@
 var express        = require('express');
-
 var app            = express();
 var bodyParser     = require('body-parser');
 var methodOverride = require('method-override');
-var route = express.Router();   //define our app using express
+var mysql 		   = require('mysql')
+var route          = express.Router();   
+var connection     = mysql.createConnection({
+	host : 'localhost',
+	user : 'root',
+	password : '',
+	database : 'assignment' 
+}) 
+connection.connect(function(err) {
+	if(err)
+		console.log(err)
+	else
+		console.log('connected')
+});
 
-var port = process.env.PORT || 80; 
+var port = process.env.PORT || 8000; 
 
 
 app.use(express.static(__dirname + '/public')); 
 
-// routes ==================================================
 app.use(bodyParser.json()); 
 
-// parse application/vnd.api+json as json
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); 
 
-// parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true })); 
 
-// override with the X-HTTP-Method-Override header in the request. simulate DELETE/PUT
 app.use(methodOverride('X-HTTP-Method-Override')); 
 
-var controller=require('./app/routes')(app);
-app.use('/', require('./app/routes')(app));
-app.use('/graphPlot', controller);
+//app.use('/graphPlot', controller);
+app.get('/',function (req,res) {
+	res.sendFile(__dirname+'/public/home.html'); // load our public/index.html file
+	console.log('hi')
+});
+app.post('/graphPlot',function(req,res){
+	//res.send('hi')
+	var id=parseInt(req.body.machine_id)
+	connection.query("SELECT country, sum(price) as price from tbl_machine_data where machine_id="+id +" group by country",
+		function(err,rows){
+			if(err){
+				console.log(err)
+				res.send(err)
+			}
+			else
+				res.send(rows)
+		})
+})
 
 //(app); // configure our routes
 

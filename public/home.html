@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Full Stack Web Dev Assignment</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/export.css" rel="stylesheet">
+	<title>Welcome</title>
+	<style>
+		#chartdiv {
+		  width: 100%;
+		  height: 500px;
+		}
+
+		.amcharts-export-menu-top-right {
+		  top: 10px;
+		  right: 0;
+		}
+	</style>
+</head>
+<body ng-app="myApp" ng-controller="myCtrl">
+	<nav class="navbar navbar-default">
+	  	<div class="container-fluid">
+	    	<div class="navbar-header">
+	      		<a class="navbar-brand" href="/">Assignment</a>
+	    	</div>
+		    <ul class="nav navbar-nav">
+		      <li class="active"><a href="/">Home</a></li>
+		    </ul>
+	  </div>
+	</nav>
+	<div class="container" ng-controller="myCtrl">
+		<div class="row">
+		</div>
+		<h2 class="text-primary">Welcome to SCT-Bangla Assignment</h2>
+		<h4 class="text-primary">Please select an option from below to see related data</h4>
+		<div class="form-group">
+			<label for="sel1">Select list:</label>
+			<select class="form-control" id="sel1" ng-model="machine" ng-change="machineSelected()">
+			    <option ng-repeat="machine in machineArr" >{{machine}}</option>
+		  	</select>
+		</div>
+
+
+		<table class="table-bordered table" ng-show="tableData.length">
+		    <thead>
+		      <tr>
+		        <th>Country</th>
+		        <th>Sum</th>
+		        <th>Action</th>
+		      </tr>
+		    </thead>
+		    <tbody>
+		      <tr ng-repeat="data in tableData track by $index">
+		        <td>{{data.country}}</td>
+		        <td>{{data.price}}</td>
+		        <td ng-show="$index==0" rowspan="{{tableData.length}}">
+		        	<a href="#" ng-click="showmeGraph()">See Graph</a>
+		        </td>
+		      </tr>
+		    </tbody>
+		</table>
+
+ 		<div class="chart" id="chartdiv" ng-show="showGraph"></div>
+
+	</div>
+
+
+
+	<script src="js/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="js/amcharts.js"></script>
+	<script src="js/serial.js"></script>
+	<script src="js/export.js"></script>
+	<script src="js/light.js"></script>
+	<script src="js/amChartsDirective.js"></script>
+	<script type="text/javascript">
+		var app = angular.module('myApp', ['amChartsDirective']);
+		app.controller('myCtrl',['$scope','$http', function($scope, $http) {
+		    var data={};
+		    $scope.showGraph=false;
+		    $scope.machineSelected = function(){
+		    	var substring=$scope.machine;
+		    	if(substring){
+		    		data.machine_id=substring.substr(substring.length-1,substring.length)
+			    	console.log(data.machine_id)
+			    	if($scope.machine){
+			    		$http.post("/graphPlot",data )
+						.success(function(result) {
+							$scope.tableData= result
+							$scope.showGraph = false;
+							$scope.plot(result)
+						});
+			    	}
+		    	}
+		    	
+		    }
+			$scope.machineArr=['Machine-1','Machine-2','Machine-3','Machine-4','Machine-5']
+			var color=["#FF0F00","#FF6600","#FF9E01","#FCD202","#F8FF01","#B0DE09","#04D215","#0D52D1","#2A0CD0"]
+
+			$scope.plot = function(result){
+				
+				var obj= {
+				     "type": "serial",
+					  "theme": "light",
+					  "marginRight": 70,
+					  "dataProvider": [],
+					  "valueAxes": [{
+					    "axisAlpha": 0,
+					    "position": "left",
+					    "title": "Sum of prices"
+					  }],
+					  "startDuration": 1,
+					  "graphs": [{
+					    "balloonText": "<b>[[category]]: [[value]]</b>",
+					    "fillColorsField": "color",
+					    "fillAlphas": 0.9,
+					    "lineAlpha": 0.2,
+					    "type": "column",
+					    "valueField": "price"
+					  }],
+					  "chartCursor": {
+					    "categoryBalloonEnabled": false,
+					    "cursorAlpha": 0,
+					    "zoomable": false
+					  },
+					  "categoryField": "country",
+					  "categoryAxis": {
+					    "gridPosition": "start",
+					    "labelRotation": 45
+					  },
+					  "export": {
+					    "enabled": false
+					  }
+
+				}
+				var j=0;
+				var temp={};
+				for(var i=0;i<result.length;i++){
+					temp.country=result[i].country;
+					temp.price=result[i].price;
+					if(j==color.length){
+						j=0;
+					}
+					temp.color= color[j];
+					j++;
+					obj.dataProvider.push(temp)
+					temp={}
+				}
+				console.log(obj)
+
+				$scope.chart = AmCharts.makeChart("chartdiv",obj)
+			}
+
+			$scope.showmeGraph = function(){
+				$scope.showGraph=true
+			}
+
+		}]);
+	</script>
+</body>
+</html>
