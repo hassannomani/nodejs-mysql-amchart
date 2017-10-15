@@ -44,8 +44,25 @@ app.post('/graphPlot',function(req,res){
 				console.log(err)
 				res.send(err)
 			}
-			else
+			else{
+				var temp={}
+				console.log(rows.length)
+				var len= rows.length;
+				for (var i = 0; i < len; i++){
+ 
+        			for (var j = 0; j <len-1; j++){
+            			if (rows[j].price <rows[j + 1].price){
+
+				           	temp=rows[j+1];
+				           	rows[j+1]=rows[j];
+				           	rows[j]=temp
+
+				        }
+					}
+				}
+				console.log(rows)		
 				res.send(rows)
+			}
 		})
 })
 
