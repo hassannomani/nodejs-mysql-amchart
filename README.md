@@ -1,4 +1,4 @@
-"# My project's README" 
+"# README" 
 * First of all let think about a scenario where some machines are bought from many of the countries around the world at different prices.
 * The target we have is to simply show the all costs for buying that particular machine
 * Basing on that data we will simply plot a graph.
